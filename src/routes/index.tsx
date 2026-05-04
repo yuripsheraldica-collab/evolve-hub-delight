@@ -1,26 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Login } from "@/components/Login";
+import { Dashboard } from "@/components/Dashboard";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/")({
   component: Index,
+  head: () => ({
+    meta: [
+      { title: "Instituto Evolução · Área do Paciente" },
+      {
+        name: "description",
+        content:
+          "Acompanhe sua evolução clínica, conduta terapêutica e relatórios no Instituto Evolução — Centro de Cuidados.",
+      },
+      { name: "theme-color", content: "#0f1c2e" },
+    ],
+  }),
 });
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
-
 function Index() {
-  return <PlaceholderIndex />;
+  const [logged, setLogged] = useState(false);
+  return (
+    <>
+      {logged ? <Dashboard onLogout={() => setLogged(false)} /> : <Login onLogin={() => setLogged(true)} />}
+      <Toaster position="top-center" richColors />
+    </>
+  );
 }
