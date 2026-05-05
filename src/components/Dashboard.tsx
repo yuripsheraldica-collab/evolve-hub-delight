@@ -543,7 +543,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 inset-x-0 z-40 sm:hidden bg-surface/95 backdrop-blur-xl border-t border-border">
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-6">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
