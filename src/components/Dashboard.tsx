@@ -1,7 +1,19 @@
 import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import { SectionCard } from "@/components/SectionCard";
-import { patient, indicators, conduct, timeline, evolutionSeries } from "@/lib/patient-data";
+import { DocumentsView } from "@/components/DocumentsView";
+import { NotificationBell, NotificationsPanel, useNotifications } from "@/components/Notifications";
+import {
+  patient,
+  indicators,
+  conduct,
+  timeline,
+  evolutionSeries,
+  vitals,
+  medications,
+  allergies,
+  exercises,
+} from "@/lib/patient-data";
 import {
   LogOut,
   LayoutDashboard,
@@ -15,6 +27,7 @@ import {
   Stethoscope,
   ShieldCheck,
   FileText,
+  FolderOpen,
   Printer,
   Download,
   AlertTriangle,
@@ -27,6 +40,11 @@ import {
   Dumbbell,
   Move3d,
   Droplet,
+  Pill,
+  Ruler,
+  Weight,
+  Phone,
+  MapPin,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -45,12 +63,14 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type Tab = "resumo" | "evolucao" | "conduta" | "exportar";
+type Tab = "resumo" | "saude" | "evolucao" | "conduta" | "documentos" | "exportar";
 
 const tabs: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "resumo", label: "Resumo", icon: LayoutDashboard },
+  { id: "saude", label: "Saúde", icon: HeartPulse },
   { id: "evolucao", label: "Evolução", icon: TrendingUp },
   { id: "conduta", label: "Conduta", icon: ClipboardList },
+  { id: "documentos", label: "Documentos", icon: FolderOpen },
   { id: "exportar", label: "Exportar", icon: Share2 },
 ];
 
