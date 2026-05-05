@@ -1,7 +1,19 @@
 import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import { SectionCard } from "@/components/SectionCard";
-import { patient, indicators, conduct, timeline, evolutionSeries } from "@/lib/patient-data";
+import { DocumentsView } from "@/components/DocumentsView";
+import { NotificationBell, NotificationsPanel, useNotifications } from "@/components/Notifications";
+import {
+  patient,
+  indicators,
+  conduct,
+  timeline,
+  evolutionSeries,
+  vitals,
+  medications,
+  allergies,
+  exercises,
+} from "@/lib/patient-data";
 import {
   LogOut,
   LayoutDashboard,
@@ -15,6 +27,7 @@ import {
   Stethoscope,
   ShieldCheck,
   FileText,
+  FolderOpen,
   Printer,
   Download,
   AlertTriangle,
@@ -27,6 +40,11 @@ import {
   Dumbbell,
   Move3d,
   Droplet,
+  Pill,
+  Ruler,
+  Weight,
+  Phone,
+  MapPin,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -45,12 +63,14 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-type Tab = "resumo" | "evolucao" | "conduta" | "exportar";
+type Tab = "resumo" | "saude" | "evolucao" | "conduta" | "documentos" | "exportar";
 
 const tabs: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "resumo", label: "Resumo", icon: LayoutDashboard },
+  { id: "saude", label: "Saúde", icon: HeartPulse },
   { id: "evolucao", label: "Evolução", icon: TrendingUp },
   { id: "conduta", label: "Conduta", icon: ClipboardList },
+  { id: "documentos", label: "Documentos", icon: FolderOpen },
   { id: "exportar", label: "Exportar", icon: Share2 },
 ];
 
@@ -63,6 +83,8 @@ const indicatorIcons = {
 
 export function Dashboard({ onLogout }: DashboardProps) {
   const [tab, setTab] = useState<Tab>("resumo");
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { items: notifItems, unread, markAll, toggle } = useNotifications();
 
   const progress = Math.round((patient.sessionsDone / patient.sessionsTotal) * 100);
   const delta = patient.globalCurrent - patient.globalAdmission;
@@ -71,17 +93,28 @@ export function Dashboard({ onLogout }: DashboardProps) {
     <div className="min-h-screen bg-background pb-28">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-surface/85 backdrop-blur-xl border-b border-border/60">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <Logo size="md" />
-          <button
-            onClick={onLogout}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-smooth"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Sair</span>
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationBell count={unread} onClick={() => setNotifOpen(true)} />
+            <button
+              onClick={onLogout}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-smooth"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sair</span>
+            </button>
+          </div>
         </div>
       </header>
+
+      <NotificationsPanel
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        items={notifItems}
+        onMarkAll={markAll}
+        onRead={toggle}
+      />
 
       <main className="max-w-5xl mx-auto px-4 pt-6 space-y-6">
         {/* Welcome banner */}
@@ -246,6 +279,94 @@ export function Dashboard({ onLogout }: DashboardProps) {
             </SectionCard>
           </div>
         )}
+
+        {tab === "saude" && (
+          <div className="space-y-6">
+            <SectionCard title="Sinais vitais" eyebrow={`Última aferição · ${patient.current}`} icon={<HeartPulse className="h-5 w-5" />}>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {vitals.map((v) => (
+                  <div key={v.label} className="rounded-xl border border-border bg-gradient-soft p-4 text-center">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{v.label}</p>
+                    <p className="mt-1 text-2xl font-bold text-foreground">
+                      {v.value}
+                      <span className="text-xs font-medium text-muted-foreground ml-1">{v.unit}</span>
+                    </p>
+                    <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-success">
+                      <CheckCircle2 className="h-3 w-3" /> Normal
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Antropometria" eyebrow="Medidas corporais" icon={<Ruler className="h-5 w-5" />}>
+              <dl className="grid sm:grid-cols-4 gap-x-8 gap-y-3 text-sm">
+                <Field icon={<Weight className="h-4 w-4" />} label="Peso" value={patient.weight} />
+                <Field icon={<Ruler className="h-4 w-4" />} label="Altura" value={patient.height} />
+                <Field icon={<Activity className="h-4 w-4" />} label="IMC" value={patient.imc} />
+                <Field icon={<Droplet className="h-4 w-4" />} label="Tipo sanguíneo" value={patient.blood} />
+              </dl>
+            </SectionCard>
+
+            <SectionCard title="Medicações em uso" eyebrow="Prescrição vigente" icon={<Pill className="h-5 w-5" />}>
+              <ul className="divide-y divide-border">
+                {medications.map((m) => (
+                  <li key={m.name} className="py-3 flex items-start gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
+                      <Pill className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-foreground text-sm">{m.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{m.dose} · {m.schedule}</p>
+                    </div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
+                      {m.duration}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </SectionCard>
+
+            <SectionCard title="Alergias" eyebrow="Atenção" icon={<AlertTriangle className="h-5 w-5" />}>
+              <div className="flex flex-wrap gap-2">
+                {allergies.map((a) => (
+                  <span key={a} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/10 text-destructive text-xs font-semibold border border-destructive/20">
+                    <AlertTriangle className="h-3 w-3" /> {a}
+                  </span>
+                ))}
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Exercícios domiciliares" eyebrow="Protocolo prescrito" icon={<Dumbbell className="h-5 w-5" />}>
+              <ul className="space-y-2">
+                {exercises.map((e, i) => (
+                  <li key={e.name} className="flex items-start gap-3 p-3 rounded-xl border border-border bg-gradient-soft">
+                    <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-foreground">{e.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{e.sets} · {e.reps} · {e.note}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </SectionCard>
+
+            <SectionCard title="Equipe e atendimento" eyebrow="Contatos" icon={<Stethoscope className="h-5 w-5" />}>
+              <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+                <Field icon={<Stethoscope className="h-4 w-4" />} label="Médico ortopedista" value={patient.doctor} />
+                <Field icon={<ShieldCheck className="h-4 w-4" />} label="Fisioterapeuta" value={`${patient.therapist} — ${patient.crefito}`} />
+                <Field icon={<MapPin className="h-4 w-4" />} label="Unidade" value={patient.unit} />
+                <Field icon={<Calendar className="h-4 w-4" />} label="Próxima sessão" value={patient.nextSession} />
+                <Field icon={<Phone className="h-4 w-4" />} label="Contato emergência" value={patient.emergencyContact} />
+                <Field icon={<ShieldCheck className="h-4 w-4" />} label="Carteirinha convênio" value={patient.insuranceCard} />
+              </dl>
+            </SectionCard>
+          </div>
+        )}
+
+        {tab === "documentos" && <DocumentsView />}
 
         {tab === "evolucao" && (
           <div className="space-y-6">
@@ -422,7 +543,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 inset-x-0 z-40 sm:hidden bg-surface/95 backdrop-blur-xl border-t border-border">
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-6">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
