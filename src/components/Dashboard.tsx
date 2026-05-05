@@ -83,6 +83,8 @@ const indicatorIcons = {
 
 export function Dashboard({ onLogout }: DashboardProps) {
   const [tab, setTab] = useState<Tab>("resumo");
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { items: notifItems, unread, markAll, toggle } = useNotifications();
 
   const progress = Math.round((patient.sessionsDone / patient.sessionsTotal) * 100);
   const delta = patient.globalCurrent - patient.globalAdmission;
@@ -91,17 +93,28 @@ export function Dashboard({ onLogout }: DashboardProps) {
     <div className="min-h-screen bg-background pb-28">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-surface/85 backdrop-blur-xl border-b border-border/60">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
           <Logo size="md" />
-          <button
-            onClick={onLogout}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-smooth"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Sair</span>
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationBell count={unread} onClick={() => setNotifOpen(true)} />
+            <button
+              onClick={onLogout}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-smooth"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sair</span>
+            </button>
+          </div>
         </div>
       </header>
+
+      <NotificationsPanel
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        items={notifItems}
+        onMarkAll={markAll}
+        onRead={toggle}
+      />
 
       <main className="max-w-5xl mx-auto px-4 pt-6 space-y-6">
         {/* Welcome banner */}
